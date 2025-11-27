@@ -1,12 +1,13 @@
-import requests
-from bs4 import BeautifulSoup
 import csv
 from typing import TypedDict
 
-album_name = input("Enter  album name: ")
+import requests
+from bs4 import BeautifulSoup
 
 # 1. The Target URL
-url = f"https://pagalfree.com/search/{album_name}"
+# album_name = input("Enter  album name: ")
+# url = f"https://pagalfree.com/search/{album_name}"
+url = "https://pagalfree.com/search/murder 2"
 
 # Define type for songs list
 
@@ -38,24 +39,31 @@ soup = BeautifulSoup(response.text, "html.parser")
 # We look for all images that contain 'images' in their source,
 # because on this site, every song has a cover image.
 songs: list[SongData] = []
-images = soup.find_all("img")
+song_items = soup.find_all("div", id="category_content")
 
 print("🔍 Scanning page...")
 
-for img in images:
-    src = img.get("src")
+for item in song_items:
+    img = item.find("img")
+    src = None
+    if img:
+        src = img.get("src")
 
-    if isinstance(src, str) and "pagalfree.com/images" in src:
-        title = img.get("alt", "Unkown Title")
+        if isinstance(src, str) and "pagalfree.com/images" in src:
+            title = "Unknown title"
 
-        parent = img.find_parent("a")
-        if parent:
-            link = parent.get("href")
+            parent = img.find_parent("a")
+            if parent:
+                link = parent.get("href")
 
-            if isinstance(link, str):
-                song_data: SongData = {"Title": "song", "Image_Url": src, "Link": link}
-                songs.append(song_data)
-                print("!found", song_data)
+                if isinstance(link, str):
+                    song_data: SongData = {
+                        "Title": "song",
+                        "Image_Url": src,
+                        "Link": link,
+                    }
+                    # songs.append(song_data)
+                    print("!found", song_data)
 
     # Filter: Only keep images that look like song covers
 # 5. Save to CSV (Excel compatible)
