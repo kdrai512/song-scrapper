@@ -1,13 +1,9 @@
 import csv
+import time
 from typing import TypedDict
 
 import requests
 from bs4 import BeautifulSoup
-
-# 1. The Target URL
-# album_name = input("Enter  album name: ")
-# url = f"https://pagalfree.com/search/{album_name}"
-url = "https://pagalfree.com/search/murder 2"
 
 # Define type for songs list
 
@@ -23,6 +19,33 @@ class SongData(TypedDict):
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
+
+
+def get_final_link(song_page_url):
+    try:
+        print("Visiting song page...")
+        res = requests.get(song_page_url, headers=headers)
+        if res.status_code != 200:
+            return "Error: Invalid page!"
+
+        page_soup = BeautifulSoup(response.text, "html.parser")
+
+        # Look for audio links
+        audio_link = page_soup.find_all("a", href=True)
+
+        # best link for 320 kbps if avaiable
+        # best_link = None
+        print(audio_link)
+        return "hello"
+
+    except Exception as e:
+        return f"❌ Error fetching page: {e}"
+
+
+# 1. The Target URL
+# album_name = input("Enter  album name: ")
+# url = f"https://pagalfree.com/search/{album_name}"
+url = "https://pagalfree.com/search/murder 2"
 
 print(f"🚀 Fetching data from {url}...")
 try:
@@ -41,20 +64,21 @@ soup = BeautifulSoup(response.text, "html.parser")
 songs: list[SongData] = []
 song_items = soup.find_all("div", id="category_content")
 
-print("🔍 Scanning page...")
+print(f"Found {len(song_items)} potential items.")
 
-for item in song_items:
+for item in song_items[:4]:
     img = item.find("img")
-    src = None
+
     if img:
         src = img.get("src")
 
         if isinstance(src, str) and "pagalfree.com/images" in src:
-            title = "Unknown title"
+            title = img.get("alt", "Unkown title")
 
             parent = img.find_parent("a")
             if parent:
                 link = parent.get("href")
+                output = get_final_link(link)
 
                 if isinstance(link, str):
                     song_data: SongData = {
@@ -62,10 +86,11 @@ for item in song_items:
                         "Image_Url": src,
                         "Link": link,
                     }
-                    # songs.append(song_data)
-                    print("!found", song_data)
+                time.sleep(1)
+                # songs.append(song_data)
+                # print("!found", song_data)
 
-    # Filter: Only keep images that look like song covers
+
 # 5. Save to CSV (Excel compatible)
 if songs:
     csv_file = "pagalfree_songs.csv"
